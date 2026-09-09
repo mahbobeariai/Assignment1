@@ -1,4 +1,5 @@
 let mediaRecorder;
+let recordedParts = [];
 
 const startButton = document.getElementById("startButton");
 const stopButton = document.getElementById("stopButton");
@@ -13,6 +14,11 @@ async function startRecording() {
     });
 
     mediaRecorder = new MediaRecorder(stream);
+	recordedParts = [];
+	
+	mediaRecorder.addEventListener("dataavailable", function(event) {
+	    recordedParts.push(event.data);
+	});
     mediaRecorder.start();
 
     status.textContent = "Recording...";
