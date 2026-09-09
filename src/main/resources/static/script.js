@@ -29,8 +29,25 @@ function stopRecording() {
 
     mediaRecorder.stop();
 
+	const audioBlob = new Blob(recordedParts, {
+	    type: "audio/webm"
+	}); 
+	uploadAudio(audioBlob);
     status.textContent = "Recording stopped.";
 
     startButton.disabled = false;
     stopButton.disabled = true;
+}
+async function uploadAudio(audioBlob) {
+
+    const formData = new FormData();
+
+    formData.append("audio", audioBlob, "recording.webm");
+
+    const response = await fetch("/api/audio", {
+        method: "POST",
+        body: formData
+    });
+
+    console.log(response);
 }
