@@ -19,3 +19,12 @@ async function startRecording() {
     startButton.disabled = true;
 	stopButton.disabled = false;
 }
+function stopRecording() {
+
+    mediaRecorder.stop();
+
+    status.textContent = "Recording stopped.";
+
+    startButton.disabled = false;
+    stopButton.disabled = true;
+}
