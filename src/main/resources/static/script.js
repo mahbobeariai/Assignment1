@@ -21,6 +21,18 @@ async function startRecording() {
 	mediaRecorder.addEventListener("dataavailable", function(event) {
 	    recordedParts.push(event.data);
 	});
+	mediaRecorder.addEventListener("stop", function() {
+
+	           const audioBlob = new Blob(recordedParts, {
+	               type: "audio/webm"
+	           });
+
+	           uploadAudio(audioBlob);
+
+	           stream.getTracks().forEach(function(track) {
+	               track.stop();
+	           });
+	       });
     mediaRecorder.start();
 
     status.textContent = "Recording...";
@@ -32,14 +44,6 @@ async function startRecording() {
 }
 function stopRecording() {
 
-	mediaRecorder.addEventListener("stop", function() {
-
-		const audioBlob = new Blob(recordedParts, {
-		    type: "audio/webm"
-		}); 
-		uploadAudio(audioBlob);
-		 
-	});
 	mediaRecorder.stop();
     status.textContent = "Recording stopped.";
 
