@@ -1,6 +1,7 @@
 package comp3011.assignment01;
 
 import org.springframework.web.bind.annotation.*;
+import java.util.concurrent.CompletableFuture;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -13,7 +14,7 @@ public class AudioController {
     }
 
     @PostMapping("/audio")
-    public String receiveAudio(@RequestParam("audio") MultipartFile audio) {
+    public CompletableFuture<String> receiveAudio(@RequestParam("audio") MultipartFile audio) {
     	
     	return transcriptionService.transcribe(audio);
     }
