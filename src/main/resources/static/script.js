@@ -10,7 +10,8 @@ startButton.addEventListener("click", startRecording);
 stopButton.addEventListener("click", stopRecording);
 
 async function startRecording() {
-    const stream = await navigator.mediaDevices.getUserMedia({
+    try {
+	const stream = await navigator.mediaDevices.getUserMedia({
         audio: true
     });
 
@@ -25,6 +26,9 @@ async function startRecording() {
     status.textContent = "Recording...";
     startButton.disabled = true;
 	stopButton.disabled = false;
+	} catch (error) {
+	    status.textContent = "Could not access the microphone.";
+	}
 }
 function stopRecording() {
 
@@ -47,13 +51,21 @@ async function uploadAudio(audioBlob) {
     const formData = new FormData();
 
     formData.append("audio", audioBlob, "recording.webm");
+	try{
 
-    const response = await fetch("/api/audio", {
-        method: "POST",
-        body: formData
-    });
-
-	const text = await response.text();
-
-	transcription.textContent = text;
+	    const response = await fetch("/api/audio", {
+	        method: "POST",
+	        body: formData
+	    });
+		if (!response.ok) {
+		    throw new Error("Could not upload the recording.");
+		}
+	
+		const text = await response.text();
+	
+		transcription.textContent = text;
+	} catch (error) {
+	    transcription.textContent = error.message;
+	    status.textContent = "Something went wrong.";
+	}
 }
