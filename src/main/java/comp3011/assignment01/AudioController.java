@@ -15,8 +15,9 @@ public class AudioController {
     @PostMapping("/audio")
     public String receiveAudio(@RequestParam("audio") MultipartFile audio) {
 
-        System.out.println("Received audio: " + audio.getOriginalFilename());
-
-        return "Audio received.";
+//        System.out.println("Received audio: " + audio.getOriginalFilename());
+//
+//        return "Audio received.";
+    	return transcriptionService.transcribe(audio);
     }
 }

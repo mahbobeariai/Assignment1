@@ -4,6 +4,7 @@ let recordedParts = [];
 const startButton = document.getElementById("startButton");
 const stopButton = document.getElementById("stopButton");
 const status = document.getElementById("status");
+const transcription = document.getElementById("transcription");
 
 startButton.addEventListener("click", startRecording);
 stopButton.addEventListener("click", stopRecording);
@@ -27,12 +28,15 @@ async function startRecording() {
 }
 function stopRecording() {
 
-    mediaRecorder.stop();
+	mediaRecorder.addEventListener("stop", function() {
 
-	const audioBlob = new Blob(recordedParts, {
-	    type: "audio/webm"
-	}); 
-	uploadAudio(audioBlob);
+		const audioBlob = new Blob(recordedParts, {
+		    type: "audio/webm"
+		}); 
+		uploadAudio(audioBlob);
+		 
+	});
+	mediaRecorder.stop();
     status.textContent = "Recording stopped.";
 
     startButton.disabled = false;
@@ -49,5 +53,7 @@ async function uploadAudio(audioBlob) {
         body: formData
     });
 
-    console.log(response);
+	const text = await response.text();
+
+	transcription.textContent = text;
 }
