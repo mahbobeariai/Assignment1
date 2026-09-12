@@ -11,12 +11,15 @@ import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 @Service
 public class TranscriptionService {
-	
-	private final HttpClient httpClient = HttpClient.newHttpClient();
+    
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 	public CompletableFuture<String> transcribe(MultipartFile audio) {
 
         String apiKey = System.getenv("OPENAI_API_KEY");
@@ -65,6 +68,19 @@ public class TranscriptionService {
                 request,
                 HttpResponse.BodyHandlers.ofString()
             )
-            .thenApply(response -> response.body());
+                .thenApply(response -> {
+                    try {
+                        JsonNode json = objectMapper.readTree(response.body());
+
+                        if (json.has("text")) {
+                            return json.get("text").asText();
+                        }
+
+                        return response.body();
+
+                    } catch (Exception e) {
+                        return response.body();
+                    }
+                });
     }
 }
