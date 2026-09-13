@@ -20,8 +20,16 @@ public class TranscriptionService {
     
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RequestTrackerService requestTrackerService;
+    
+    public TranscriptionService(RequestTrackerService requestTrackerService) {
+        this.requestTrackerService = requestTrackerService;
+    }
+    
 	public CompletableFuture<String> transcribe(MultipartFile audio) {
-
+		
+		requestTrackerService.requestStarted();
+		
         String apiKey = System.getenv("OPENAI_API_KEY");
 
         if (apiKey == null || apiKey.isBlank()) {
