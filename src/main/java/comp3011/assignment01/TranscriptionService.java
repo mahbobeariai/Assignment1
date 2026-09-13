@@ -81,14 +81,19 @@ public class TranscriptionService {
                         JsonNode json = objectMapper.readTree(response.body());
 
                         if (json.has("text")) {
+                            requestTrackerService.requestSucceeded();
                             return json.get("text").asText();
                         }
-
-                        return response.body();
-
+                        requestTrackerService.requestFailed();
+                        return "Transcription failed.";
                     } catch (Exception e) {
-                        return response.body();
+                        requestTrackerService.requestFailed();
+                        return "Could not read the transcription response.";
                     }
-                });
+                })
+		        .exceptionally(error -> {
+		            requestTrackerService.requestFailed();
+		            return "Could not connect to OpenAI.";
+		        });
     }
 }

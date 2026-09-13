@@ -68,6 +68,8 @@ async function uploadAudio(audioBlob) {
 		const text = await response.text();
 	
 		transcription.textContent = text;
+		status.textContent = "Ready to record.";
+		
 	} catch (error) {
 	    transcription.textContent = error.message;
 	    status.textContent = "Something went wrong.";
