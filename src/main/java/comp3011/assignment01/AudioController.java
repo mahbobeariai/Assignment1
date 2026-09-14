@@ -15,7 +15,7 @@ public class AudioController {
 
     @PostMapping("/audio")
     public CompletableFuture<String> receiveAudio(@RequestParam("audio") MultipartFile audio) {
-    	
+    	// Pass the uploaded audio to the Transcription service
     	return transcriptionService.transcribe(audio);
     }
 }

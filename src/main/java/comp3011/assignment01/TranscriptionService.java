@@ -27,7 +27,7 @@ public class TranscriptionService {
     }
     
 	public CompletableFuture<String> transcribe(MultipartFile audio) {
-		
+		// Read the API key from the environment so it is not stored in the code.
         String apiKey = System.getenv("OPENAI_API_KEY");
 		
         if (apiKey == null || apiKey.isBlank()) {
@@ -40,7 +40,7 @@ public class TranscriptionService {
 
         try {
             audioBytes = audio.getBytes();
-
+            // multipart request.
             body.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
             body.write(("Content-Disposition: form-data; name=\"model\"\r\n\r\n")
                     .getBytes(StandardCharsets.UTF_8));
@@ -70,7 +70,7 @@ public class TranscriptionService {
         	    .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))
         	    .build();
         
-
+     // Send the audio to the OpenAI transcription service.
         return httpClient.sendAsync(
                 request,
                 HttpResponse.BodyHandlers.ofString()

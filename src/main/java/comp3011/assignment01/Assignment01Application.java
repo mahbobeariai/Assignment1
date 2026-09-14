@@ -11,3 +11,4 @@ public class Assignment01Application {
 	}
 
 }
+// Generative AI ChatGPT was used as a research and development aid for this assignment.

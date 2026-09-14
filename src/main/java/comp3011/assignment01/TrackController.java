@@ -14,6 +14,7 @@ public class TrackController {
     public TrackController(RequestTrackerService requestTrackerService) {
         this.requestTrackerService = requestTrackerService;
     }
+    // Return the current input and output token statistics.
     @GetMapping("/stats")
     public Map<String, Long> getStats() {
         return requestTrackerService.getStats();

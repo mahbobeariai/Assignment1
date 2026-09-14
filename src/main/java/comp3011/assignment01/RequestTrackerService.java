@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentMap;
 public class RequestTrackerService {
     private final ConcurrentMap<String, Long> stats =
             new ConcurrentHashMap<>();
-
+    // Keep track of the input and output token totals.
     public RequestTrackerService() {
         stats.put("inputTokens", 0L);
         stats.put("outputTokens", 0L);
