@@ -31,8 +31,9 @@ public class TranscriptionService {
 		requestTrackerService.requestStarted();
 		
         String apiKey = System.getenv("OPENAI_API_KEY");
-
+		
         if (apiKey == null || apiKey.isBlank()) {
+        	 requestTrackerService.requestFailed();
             throw new IllegalStateException("OPENAI_API_KEY is not set.");
         }
         
@@ -47,6 +48,7 @@ public class TranscriptionService {
             body.write(("Content-Disposition: form-data; name=\"model\"\r\n\r\n")
                     .getBytes(StandardCharsets.UTF_8));
             body.write(("gpt-4o-mini-transcribe\r\n").getBytes(StandardCharsets.UTF_8));
+           
             body.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
             body.write(("Content-Disposition: form-data; name=\"file\"; filename=\"recording.webm\"\r\n")
                     .getBytes(StandardCharsets.UTF_8));
@@ -56,12 +58,14 @@ public class TranscriptionService {
             body.write(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
             
         } catch (IOException e) {
+        	requestTrackerService.requestFailed();
             throw new IllegalStateException("Could not prepare the audio request.", e);
         }
         
         URI openAiUrl = URI.create(
         		"https://api.openai.com/v1/audio/transcriptions"
         );
+          
         
         HttpRequest request = HttpRequest.newBuilder()
         	    .uri(openAiUrl)
@@ -70,30 +74,33 @@ public class TranscriptionService {
         	    .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))
         	    .build();
         
-        System.out.println("Service received: " + audio.getOriginalFilename());
 
         return httpClient.sendAsync(
                 request,
                 HttpResponse.BodyHandlers.ofString()
             )
-                .thenApply(response -> {
-                    try {
-                        JsonNode json = objectMapper.readTree(response.body());
+        		.thenApply(response -> {
+        		    try {
+        		        if (response.statusCode() != 200) {
+        		            requestTrackerService.requestFailed();
+        		            return "Transcription failed.";
+        		        }
+        		        JsonNode json = objectMapper.readTree(response.body());
 
-                        if (json.has("text")) {
-                            requestTrackerService.requestSucceeded();
-                            return json.get("text").asText();
-                        }
-                        requestTrackerService.requestFailed();
-                        return "Transcription failed.";
-                    } catch (Exception e) {
-                        requestTrackerService.requestFailed();
-                        return "Could not read the transcription response.";
-                    }
-                })
-		        .exceptionally(error -> {
-		            requestTrackerService.requestFailed();
-		            return "Could not connect to OpenAI.";
-		        });
+        		        if (json.has("text")) {
+        		            requestTrackerService.requestSucceeded();
+        		            return json.get("text").asText();
+        		        }
+        		        requestTrackerService.requestFailed();
+        		        return "Transcription failed.";
+        		    } catch (Exception e) {
+        		        requestTrackerService.requestFailed();
+        		        return "Could not read the transcription response.";
+        		    }
+        		})
+		    .exceptionally(e -> {
+		        requestTrackerService.requestFailed();
+		        return "Could not contact the transcription service.";
+		    });
     }
 }
