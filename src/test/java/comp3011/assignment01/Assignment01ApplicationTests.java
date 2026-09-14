@@ -11,6 +11,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -51,5 +52,29 @@ class Assignment01ApplicationTests {
         for (CompletableFuture<HttpResponse<String>> request : requests) {
             assertEquals(200, request.join().statusCode());
         }
+    }
+    
+    @Test
+    void tracksRequestsCorrectlyWhenManyRequestsRunAtTheSameTime() {
+
+        RequestTrackerService tracker = new RequestTrackerService();
+
+        List<CompletableFuture<Void>> requests = new ArrayList<>();
+
+        for (int i = 0; i < 250; i++) {
+
+            requests.add(
+                    CompletableFuture.runAsync(() -> {
+                        tracker.requestStarted();
+                    })
+            );
+        }
+        CompletableFuture.allOf(
+                requests.toArray(new CompletableFuture[0])
+        ).join();
+
+        Map<String, Long> stats = tracker.getStats();
+
+        assertEquals(250, stats.get("totalRequests"));
     }
 }
