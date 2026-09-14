@@ -28,12 +28,9 @@ public class TranscriptionService {
     
 	public CompletableFuture<String> transcribe(MultipartFile audio) {
 		
-		requestTrackerService.requestStarted();
-		
         String apiKey = System.getenv("OPENAI_API_KEY");
 		
         if (apiKey == null || apiKey.isBlank()) {
-        	 requestTrackerService.requestFailed();
             throw new IllegalStateException("OPENAI_API_KEY is not set.");
         }
         
@@ -58,7 +55,6 @@ public class TranscriptionService {
             body.write(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
             
         } catch (IOException e) {
-        	requestTrackerService.requestFailed();
             throw new IllegalStateException("Could not prepare the audio request.", e);
         }
         
@@ -82,25 +78,34 @@ public class TranscriptionService {
         		.thenApply(response -> {
         		    try {
         		        if (response.statusCode() != 200) {
-        		            requestTrackerService.requestFailed();
         		            return "Transcription failed.";
         		        }
-        		        JsonNode json = objectMapper.readTree(response.body());
 
+        		        JsonNode json = objectMapper.readTree(response.body());
         		        if (json.has("text")) {
-        		            requestTrackerService.requestSucceeded();
+        		            JsonNode usage = json.get("usage");
+        		            if (usage != null) {
+        		                long inputTokens =
+        		                        usage.get("input_tokens").asLong();
+
+        		                long outputTokens =
+        		                        usage.get("output_tokens").asLong();
+
+        		                requestTrackerService.addTokens(
+        		                        inputTokens,
+        		                        outputTokens
+        		                );
+        		            }
         		            return json.get("text").asText();
         		        }
-        		        requestTrackerService.requestFailed();
         		        return "Transcription failed.";
+
         		    } catch (Exception e) {
-        		        requestTrackerService.requestFailed();
         		        return "Could not read the transcription response.";
         		    }
         		})
-		    .exceptionally(e -> {
-		        requestTrackerService.requestFailed();
-		        return "Could not contact the transcription service.";
-		    });
+        		.exceptionally(e -> {
+        		    return "Could not contact the transcription service.";
+        		});
     }
 }

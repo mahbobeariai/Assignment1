@@ -57,17 +57,16 @@ class Assignment01ApplicationTests {
     }
     
     @Test
-    void tracksRequestsCorrectlyWhenManyRequestsRunAtTheSameTime() {
+    void tracksTokensCorrectlyWhenManyRequestsRunAtTheSameTime() {
 
         RequestTrackerService tracker = new RequestTrackerService();
 
         List<CompletableFuture<Void>> requests = new ArrayList<>();
 
         for (int i = 0; i < 250; i++) {
-
             requests.add(
                     CompletableFuture.runAsync(() -> {
-                        tracker.requestStarted();
+                        tracker.addTokens(100, 20);
                     })
             );
         }
@@ -77,6 +76,7 @@ class Assignment01ApplicationTests {
 
         Map<String, Long> stats = tracker.getStats();
 
-        assertEquals(250, stats.get("totalRequests"));
+        assertEquals(25000, stats.get("inputTokens"));
+        assertEquals(5000, stats.get("outputTokens"));
     }
 }

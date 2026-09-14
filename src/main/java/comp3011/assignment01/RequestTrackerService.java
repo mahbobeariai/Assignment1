@@ -11,21 +11,15 @@ public class RequestTrackerService {
             new ConcurrentHashMap<>();
 
     public RequestTrackerService() {
-        stats.put("totalRequests", 0L);
-        stats.put("successfulRequests", 0L);
-        stats.put("failedRequests", 0L);
+        stats.put("inputTokens", 0L);
+        stats.put("outputTokens", 0L);
     }
-    public synchronized void requestStarted() {
-        stats.put("totalRequests",
-                stats.get("totalRequests") + 1);
-    }
-    public synchronized void requestSucceeded() {
-        stats.put("successfulRequests",
-                stats.get("successfulRequests") + 1);
-    }
-    public synchronized void requestFailed() {
-        stats.put("failedRequests",
-                stats.get("failedRequests") + 1);
+    public synchronized void addTokens(long inputTokens, long outputTokens) {
+        stats.put("inputTokens",
+                stats.get("inputTokens") + inputTokens);
+
+        stats.put("outputTokens",
+                stats.get("outputTokens") + outputTokens);
     }
     public Map<String, Long> getStats() {
         return stats;
