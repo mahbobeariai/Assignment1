@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -24,34 +27,33 @@ class Assignment01ApplicationTests {
     void contextLoads() {
     }
     @Test
-    void handlesManyRequestsAtTheSameTime() {
+    void handlesManyRequestsAtTheSameTime() throws Exception {
 
         HttpClient client = HttpClient.newHttpClient();
 
-        List<CompletableFuture<HttpResponse<String>>> requests =
-                new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(250);
+
+        List<Future<HttpResponse<String>>> requests = new ArrayList<>();
+
         for (int i = 0; i < 250; i++) {
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(
-                            "http://localhost:" + port + "/api/v1/admin/uptime"))
-                    .GET()
-                    .build();
-
-            requests.add(
-                    client.sendAsync(
-                            request,
-                            HttpResponse.BodyHandlers.ofString()
-                    )
-            );
+            Future<HttpResponse<String>> request = executor.submit(() -> {
+                HttpRequest httpRequest = HttpRequest.newBuilder()
+                        .uri(URI.create(
+                                "http://localhost:" + port + "/api/v1/admin/uptime"))
+                        .GET()
+                        .build();
+                return client.send(
+                        httpRequest,
+                        HttpResponse.BodyHandlers.ofString()
+                );
+            });
+            requests.add(request);
         }
-        CompletableFuture.allOf(
-                requests.toArray(new CompletableFuture[0])
-        ).join();
 
-        for (CompletableFuture<HttpResponse<String>> request : requests) {
-            assertEquals(200, request.join().statusCode());
+        for (Future<HttpResponse<String>> request : requests) {
+            assertEquals(200, request.get().statusCode());
         }
+        executor.shutdown();
     }
     
     @Test
